@@ -1,13 +1,43 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+<script lang="ts">
+import { defineComponent } from 'vue';
+import 'leaflet/dist/leaflet.css';
+import { LMap, LGeoJson } from '@vue-leaflet/vue-leaflet';
+
+export default defineComponent({
+  components: {
+    LMap,
+    LGeoJson,
+  },
+  data(): Record<any, any> {
+    return {
+      geojson: {
+        type: 'FeatureCollection',
+        features: [
+        ],
+      },
+      geojsonOptions: {
+        pointToLayer: null
+      },
+      mapIsReady: false
+    };
+  },
+  async beforeMount() {
+    // HERE is where to load Leaflet components!
+    const { circleMarker } = await import('leaflet/dist/leaflet-src.esm');
+
+    // And now the Leaflet circleMarker function can be used by the options:
+    this.geojsonOptions.pointToLayer = (feature: any, latLng: any) =>
+      circleMarker(latLng, { radius: 8 });
+    this.mapIsReady = true;
+  },
+});
 </script>
 
 <template>
   <main>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-    </div>
+  <LMap style="height:50vh">
+    <LGeoJson :geojson="geojson" :options="geojsonOptions" />
+  </LMap>
   </main>
 </template>
 

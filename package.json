@@ -11,10 +11,12 @@
   },
   "dependencies": {
     "@vue-leaflet/vue-leaflet": "^0.6.1",
+    "leaflet": "^1.8.0",
     "vue": "^3.2.37"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.0",
+    "@types/leaflet": "^1.7.11",
     "@types/node": "^16.11.45",
     "@vitejs/plugin-vue": "^3.0.1",
     "@vue/eslint-config-typescript": "^11.0.0",
