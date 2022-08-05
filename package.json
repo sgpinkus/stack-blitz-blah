@@ -12,7 +12,8 @@
   "dependencies": {
     "@vue-leaflet/vue-leaflet": "^0.6.1",
     "leaflet": "^1.8.0",
-    "vue": "^3.2.37"
+    "vue": "^3.2.37",
+    "vue2-leaflet": "^2.7.1"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.0",

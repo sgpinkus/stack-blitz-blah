@@ -1,30 +1,77 @@
 # vue-leaflet-basics
-https://github.com/vue-leaflet/vue-leaflet
 
-## Customize configuration
+# [@vue-leaflet/vue-leaflet][1]
+Trying to learn how to use @vue-leaflet/vue-leaflet. It's confusing. they have no doc, and no typings. I think they assume I know Vue2 version or Leaflet. Even given leaflet knowledge isn't immediately clear how plugin maps to leaflet Javascript API. I.e. how do I mape this to the vue components - and how do you expect me to know this?!:
 
-See [Vite Configuration Reference](https://vitejs.dev/config/).
+        map = L.map('map').setView([51.505, -0.09], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+        var marker = L.marker([51.5, -0.09]).addTo(map);
+        var circle = L.circle([51.508, -0.11], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: 500
+        }).addTo(map);
+        var polygon = L.polygon([
+            [51.509, -0.08],
+            [51.503, -0.06],
+            [51.51, -0.047]
+        ]).addTo(map);
+        marker.bindPopup("<b>Hello world!</b><br>I am a popup.").openPopup();
+        circle.bindPopup("I am a circle.");
+        polygon.bindPopup("I am a polygon.");
 
-## Project Setup
+README.md start off with some confusing BS:
 
-```sh
-npm install
-```
+        <template>
+        <l-map style="height:50vh">
+            <l-geo-json :geojson="geojson" :options="geojsonOptions" />
+        </l-map>
+        </template>
+        <script>
+        // DON'T load Leaflet components here! Its CSS is needed though, if not imported elsewhere in your application.
+        import "leaflet/dist/leaflet.css"
+        import { LMap, LGeoJson } from "@vue-leaflet/vue-leaflet";
 
-### Compile and Hot-Reload for Development
+        export default {
+        components: {
+            LMap,
+            LGeoJson,
+        },
+        data() {
+            return {
+            geojson: {
+                type: "FeatureCollection",
+                features: [
+                // ...
+                ],
+            },
+            geojsonOptions: {
+                // Options that don't rely on Leaflet methods.
+            },
+            };
+        },
+        async beforeMount() {
+            // HERE is where to load Leaflet components!
+            const { circleMarker } = await import("leaflet/dist/leaflet-src.esm");
+            // And now the Leaflet circleMarker function can be used by the options:
+            this.geojsonOptions.pointToLayer = (feature, latLng) =>
+            circleMarker(latLng, { radius: 8 });
+            this.mapIsReady = true;
+        },
+        };
+        </script>
 
-```sh
-npm run dev
-```
+WTF is LMap is not a component? You literally rendering it in the example template! Why is a circleMarker anyway? You have a LCircleMarker component?! And why are you loading from leaflet not fucking vue-leaflet. W-T-F. If goal is  cram the most confusing possible starting example into a README.md, you win.
 
-### Type-Check, Compile and Minify for Production
+Ex Not clear how map.setView([51.505, -0.09], 13); would map to component. And other shit.
 
-```sh
-npm run build
-```
+Summary: Might be easier to not use this BS ...
 
-### Lint with [ESLint](https://eslint.org/)
+# [vue2-leaflet](https://github.com/vue-leaflet/Vue2Leaflet)
+Does not seem to work with vue 3. Maybe can use the docs though? Ok docs seems to correspond. No mention on confusing import() crap either. Now, how would .bindPopup() and other imperatives map to the declarative interface? A: Mostly declaratively ... see LPopup. OK, this'll do!
 
-```sh
-npm run lint
-```
+[1]: https://github.com/vue-leaflet/vue-leaflet

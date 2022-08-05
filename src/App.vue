@@ -1,12 +1,16 @@
-<script lang="ts">
+<script lang='ts'>
 import { defineComponent } from 'vue';
 import 'leaflet/dist/leaflet.css';
-import { LMap, LGeoJson } from '@vue-leaflet/vue-leaflet';
+import { LMap, LTileLayer, LMarker, LCircle, LPolygon, LPopup } from '@vue-leaflet/vue-leaflet';
 
 export default defineComponent({
   components: {
-    LMap,
-    LGeoJson,
+    LMap, // https://vue2-leaflet.netlify.app/components/LMap.html#demo
+    LTileLayer,
+    LMarker,
+    LCircle,
+    LPolygon,
+    LPopup,
   },
   data(): Record<any, any> {
     return {
@@ -18,54 +22,39 @@ export default defineComponent({
       geojsonOptions: {
         pointToLayer: null
       },
+      map: {
+        zoom: 13,
+        center: [51.505, -0.09],
+      },
+      tileLayer: {
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        maxZoom: 19,
+        attribution: '© OpenStreetMap',
+      },
       mapIsReady: false
     };
-  },
-  async beforeMount() {
-    // HERE is where to load Leaflet components!
-    const { circleMarker } = await import('leaflet/dist/leaflet-src.esm');
-
-    // And now the Leaflet circleMarker function can be used by the options:
-    this.geojsonOptions.pointToLayer = (feature: any, latLng: any) =>
-      circleMarker(latLng, { radius: 8 });
-    this.mapIsReady = true;
-  },
+  }
 });
 </script>
 
 <template>
-  <main>
-  <LMap style="height:50vh">
-    <LGeoJson :geojson="geojson" :options="geojsonOptions" />
+  <LMap style='height:100vh' :='map'>
+    <LTileLayer :='tileLayer'  />
+    <LMarker  :lat-lng='[51.505, -0.09]'><LPopup><h1>Hi!</h1><p>You've popped me.</p></LPopup></LMarker>
+    <LCircle :lat-lng='[51.508, -0.11]'
+      color='blue'
+      :radius='500'
+      fillColor='blue'
+      :fillOpacity='0.2'
+      fill='true'
+    ><LPopup><h1>Circle</h1></LPopup></LCircle>
+    <LMarker  :lat-lng='[51.508, -0.11]'/>
+    <LPolygon :lat-lngs='[[51.509, -0.08], [51.503, -0.06],[51.51, -0.047]]' color='#ff00ff' fillColor='#ff00ff' fill='true'>
+      <LPopup><h1>Polygon</h1><p>You've popped my polygon.</p></LPopup>
+    </LPolygon>
   </LMap>
-  </main>
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-}
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-}
 </style>
