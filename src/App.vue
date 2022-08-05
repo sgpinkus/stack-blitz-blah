@@ -1,11 +1,11 @@
 <script lang='ts'>
 import { defineComponent } from 'vue';
 import 'leaflet/dist/leaflet.css';
-import { LMap, LTileLayer, LMarker, LCircle, LPolygon, LPopup } from '@vue-leaflet/vue-leaflet';
+import { LMap, LTileLayer, LMarker, LCircle, LPolygon, LPopup } from '@vue-leaflet/vue-leaflet'; //  https://vue2-leaflet.netlify.app/components/LMap.html#demo
 
 export default defineComponent({
   components: {
-    LMap, // https://vue2-leaflet.netlify.app/components/LMap.html#demo
+    LMap,
     LTileLayer,
     LMarker,
     LCircle,
@@ -31,6 +31,12 @@ export default defineComponent({
         maxZoom: 19,
         attribution: '© OpenStreetMap',
       },
+      // tileLayer2: {
+      //   url: 'http://127.0.0.1:8080/api/tile/{z}/{x}/{y}/png',
+      //   maxZoom: 19,
+      //   attribution: '© Me',
+      //   opacity: 0.4
+      // },
       mapIsReady: false
     };
   }
@@ -40,16 +46,17 @@ export default defineComponent({
 <template>
   <LMap style='height:100vh' :='map'>
     <LTileLayer :='tileLayer'  />
+    <!-- <LTileLayer :='tileLayer2' /> -->
     <LMarker  :lat-lng='[51.505, -0.09]'><LPopup><h1>Hi!</h1><p>You've popped me.</p></LPopup></LMarker>
     <LCircle :lat-lng='[51.508, -0.11]'
       color='blue'
       :radius='500'
       fillColor='blue'
       :fillOpacity='0.2'
-      fill='true'
+      :fill='true'
     ><LPopup><h1>Circle</h1></LPopup></LCircle>
     <LMarker  :lat-lng='[51.508, -0.11]'/>
-    <LPolygon :lat-lngs='[[51.509, -0.08], [51.503, -0.06],[51.51, -0.047]]' color='#ff00ff' fillColor='#ff00ff' fill='true'>
+    <LPolygon :lat-lngs='[[51.509, -0.08], [51.503, -0.06],[51.51, -0.047]]' color='#ff00ff' fillColor='#ff00ff' :fill='true'>
       <LPopup><h1>Polygon</h1><p>You've popped my polygon.</p></LPopup>
     </LPolygon>
   </LMap>
