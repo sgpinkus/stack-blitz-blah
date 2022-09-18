@@ -1,6 +1,47 @@
 # vue-leaflet-basics
+# [vue2-leaflet](https://github.com/vue-leaflet/Vue2Leaflet)
+Does not seem to work with vue 3. Maybe can use the docs though? Ok docs seems to correspond. No mention on confusing import() crap either. Now, how would .bindPopup() and other imperatives map to the declarative interface? A: Mostly declaratively ... see LPopup. OK, this'll do!
 
-# [@vue-leaflet/vue-leaflet][1]
+## Add Search
+Recommended search plugin is a PoS. Can do ourselves? Custom UI widgets require "controls". Essentially add this:
+
+        nav = new NavControl()
+        nav.addTo(map);
+
+        function NavControl() {
+            this.map = null;
+            this._div = null;
+
+            this.update = function() {
+                this._div.innerHTML = '<input class="navi" id="navi-loc" type="text"/>' +
+                '<input type="button" value="search" class="search" id="navi-button" onclick="foo();"/>'
+            }
+
+            this.onAdd = function(map) {
+                this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+                this.map = map;
+                this.update();
+                return this._div;
+            }
+        }
+        NavControl.prototype = L.control();
+
+Leaflet API is like
+
+        map = L.map('map')
+        XXX.addTo(map)
+
+Need to define control get access to map object somehow then add control.  Can't see how to accces map object directly! https://vue2-leaflet.netlify.app/quickstart/#accessing-leaflet-api says can use ref to [LMap](https://vue2-leaflet.netlify.app/components/LMap.html) vue object:
+
+      this.$nextTick(() => {
+        this.$refs.myMap.mapObject.ANY_LEAFLET_MAP_METHOD();
+      });
+
+Bu this does not work and "mapObject" is not documented on LMap component. Grrr.
+
+# APPENDIX #########
+
+# [@vue-leaflet/vue-leaflet](https://github.com/vue-leaflet/vue-leaflet)
 Trying to learn how to use @vue-leaflet/vue-leaflet. It's confusing. they have no doc, and no typings. I think they assume I know Vue2 version or Leaflet. Even given leaflet knowledge isn't immediately clear how plugin maps to leaflet Javascript API. I.e. how do I mape this to the vue components - and how do you expect me to know this?!:
 
         map = L.map('map').setView([51.505, -0.09], 13);
@@ -70,8 +111,3 @@ WTF is LMap is not a component? You literally rendering it in the example templa
 Ex Not clear how map.setView([51.505, -0.09], 13); would map to component. And other shit.
 
 Summary: Might be easier to not use this BS ...
-
-# [vue2-leaflet](https://github.com/vue-leaflet/Vue2Leaflet)
-Does not seem to work with vue 3. Maybe can use the docs though? Ok docs seems to correspond. No mention on confusing import() crap either. Now, how would .bindPopup() and other imperatives map to the declarative interface? A: Mostly declaratively ... see LPopup. OK, this'll do!
-
-[1]: https://github.com/vue-leaflet/vue-leaflet
