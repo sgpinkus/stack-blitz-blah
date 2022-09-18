@@ -10,10 +10,12 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },
   "dependencies": {
+    "@mdi/font": "^7.0.96",
     "@vue-leaflet/vue-leaflet": "^0.6.1",
     "leaflet": "^1.8.0",
     "vue": "^3.2.37",
-    "vue2-leaflet": "^2.7.1"
+    "vue2-leaflet": "^2.7.1",
+    "vuetify": "^3.0.0-beta.11"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.0",
