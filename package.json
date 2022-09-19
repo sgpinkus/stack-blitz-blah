@@ -10,6 +10,7 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },
   "dependencies": {
+    "@googlemaps/js-api-loader": "^1.14.3",
     "@mdi/font": "^7.0.96",
     "@vue-leaflet/vue-leaflet": "^0.6.1",
     "axios": "^0.27.2",

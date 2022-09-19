@@ -1,22 +1,40 @@
 <script lang='ts'>
 import { defineComponent, nextTick } from 'vue';
-import type { IGoogleMapsResult, LatLng } from './types';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { LMap, LTileLayer, LMarker, LCircle, LPolygon, LPopup, LControl } from '@vue-leaflet/vue-leaflet'; //  https://vue2-leaflet.netlify.app/components/LMap.html#demo
-import axios from 'axios';
+import { LMap, LTileLayer, LMarker, LCircle, LPolygon, LPopup, LControl } from '@vue-leaflet/vue-leaflet'; // https://vue2-leaflet.netlify.app/components/
+import { Loader } from '@googlemaps/js-api-loader';
 
 const config = {
   GoogleMapsApiKey: 'AIzaSyDyEdeJ21vNiJVK-5M24RXKqRJBVmHDnPw',
 };
 
-async function geocode(address: string) {
-  const baseUrl = 'https://maps.googleapis.com/maps/api/geocode/json';
-  const query = new URLSearchParams({ address, key: config.GoogleMapsApiKey });
-  const queryUrl = `${baseUrl}?${query}`;
-  console.log(queryUrl);
-  return (await axios.get(queryUrl)).data;
+let Google: any;
+let GooglePlacesService: any;
+
+
+// https://developers.google.com/maps/documentation/places/web-service/search-find-place
+async function geocode(query: string) {
+  const request = {
+    query,
+    fields: ['name', 'geometry', 'formatted_address', 'type', 'place_id'],
+  };
+  let result: any = await new Promise((resolve, reject) => {
+    GooglePlacesService.findPlaceFromQuery(request, function(results: any, status: any) {
+      if (status === Google.maps.places.PlacesServiceStatus.OK) return resolve(results);
+      reject(status);
+    });
+  });
+  result = JSON.parse(JSON.stringify(result));
+  console.log(result);
+  return result;
 }
+
+const loader = new Loader({
+  apiKey: config.GoogleMapsApiKey,
+  version: 'weekly',
+  libraries: ['places']
+});
 
 export default defineComponent({
   components: {
@@ -48,7 +66,7 @@ export default defineComponent({
           pointToLayer: null
         },
         map: {
-          zoom: 13,
+          zoom: 11,
           center: [51.505, -0.09],
         },
         tileLayer: {
@@ -70,14 +88,6 @@ export default defineComponent({
         };
       });
     },
-    // Map search result to entrie for display list.
-    searchResultItems () {
-      return this.searchResults.map((entry: any) => {
-        const Description = entry.formatted_address;
-
-        return Object.assign({}, entry, { Description });
-      });
-    },
   },
   watch: {
     searchText (val, oldVal) {
@@ -93,12 +103,13 @@ export default defineComponent({
         console.log('cancel', this.searchTimerId);
         clearTimeout(this.searchTimerId);
       }
+      // this.searchResults = [];
 
       this.searchTimerId = setTimeout(() => {
         // Lazily load input items
         geocode(this.searchText)
           .then((data: any) => {
-            this.searchResults = data.results.slice(0, 20);
+            this.searchResults = data.slice(0, 20);
             this.count = this.searchResults.length;
           })
           .catch(err => {
@@ -116,14 +127,27 @@ export default defineComponent({
     showOnMap() {
       if(!this.selectedSearchResult) return false;
       console.debug('showOnMap', this.selectedSearchResult);
-      const { northeast, southwest } = this.selectedSearchResult.geometry.viewport;
+      const { north, east, south, west } = this.selectedSearchResult.geometry.viewport;
       const location = this.selectedSearchResult.geometry.location;
       this.showSearchDialog = false;
       nextTick(() => {
-        L.marker(location).addTo(this.map);
-        this.map.fitBounds([northeast, southwest]);
+        const marker = L.marker(location);
+        marker.addTo(this.map);
+        const popup = L.popup().setContent(`<p>${JSON.stringify(this.selectedSearchResult)}</p>`);
+        marker.bindPopup(popup);
+        this.map.fitBounds([[north, east], [south, west]]);
       });
     },
+    clearSearchResults() {
+      this.selectedSearchResult = null;
+      this.searchResults = [];
+      this.searchText = '';
+    }
+  },
+  async beforeMount() {
+    Google = await loader.load();
+    const map = new Google.maps.Map(document.createElement('div')); // Google API wrapper wants a map. Here you go friend.
+    GooglePlacesService = new Google.maps.places.PlacesService(map);
   }
 });
 </script>
@@ -138,16 +162,15 @@ export default defineComponent({
             <v-autocomplete
               v-model="selectedSearchResult"
               v-model:search="searchText"
-              :items="searchResultItems"
+              :items="searchResults"
               :loading="isLoading"
-              hide-no-data
-              hide-selected
-              item-title="Description"
-              item-value="Place"
+              item-title="formatted_address"
+              item-value="place_id"
               label="Places"
               placeholder="Start typing to Search"
               prepend-icon="mdi-database-search"
               return-object
+              no-filter
               style="max-height: 50vh;"
             ></v-autocomplete>
           </v-card-text>
@@ -178,7 +201,7 @@ export default defineComponent({
             <v-btn
               :disabled="!selectedSearchResult"
               variant="outlined"
-              @click="selectedSearchResult = null"
+              @click="clearSearchResults"
             >Clear Search<v-icon end>mdi-close-circle</v-icon>
             </v-btn>
             <v-btn
@@ -197,7 +220,6 @@ export default defineComponent({
               <LTileLayer :='mapOptions.tileLayer'  />
               <!-- <LTileLayer :='tileLayer2' /> -->
               <LControl position='topright'><v-btn @click='showSearchDialog = !showSearchDialog' icon='mdi-magnify'></v-btn></LControl>
-              <LMarker  :lat-lng='[51.505, -0.09]'><LPopup><h1>Hi!</h1><p>You've popped me.</p></LPopup></LMarker>
               <LCircle :lat-lng='[51.508, -0.11]'
                 color='blue'
                 :radius='500'
@@ -205,7 +227,7 @@ export default defineComponent({
                 :fillOpacity='0.2'
                 :fill='true'
               ><LPopup><h1>Circle</h1></LPopup></LCircle>
-              <LMarker  :lat-lng='[51.508, -0.11]'/>
+              <LMarker  :lat-lng='[51.508, -0.11]'><LPopup><h1>Hi!</h1><p>You've popped me.</p></LPopup></LMarker>
               <LPolygon :lat-lngs='[[51.509, -0.08], [51.503, -0.06],[51.51, -0.047]]' color='#ff00ff' fillColor='#ff00ff' :fill='true'>
                 <LPopup><h1>Polygon</h1><p>You've popped my polygon.</p></LPopup>
               </LPolygon>
