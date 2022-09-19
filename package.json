@@ -12,6 +12,7 @@
   "dependencies": {
     "@mdi/font": "^7.0.96",
     "@vue-leaflet/vue-leaflet": "^0.6.1",
+    "axios": "^0.27.2",
     "leaflet": "^1.8.0",
     "vue": "^3.2.37",
     "vue2-leaflet": "^2.7.1",

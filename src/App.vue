@@ -1,9 +1,22 @@
 <script lang='ts'>
 import { defineComponent, nextTick } from 'vue';
+import type { IGoogleMapsResult, LatLng } from './types';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { LMap, LTileLayer, LMarker, LCircle, LPolygon, LPopup, LControl } from '@vue-leaflet/vue-leaflet'; //  https://vue2-leaflet.netlify.app/components/LMap.html#demo
+import axios from 'axios';
 
+const config = {
+  GoogleMapsApiKey: 'AIzaSyDyEdeJ21vNiJVK-5M24RXKqRJBVmHDnPw',
+};
+
+async function geocode(address: string) {
+  const baseUrl = 'https://maps.googleapis.com/maps/api/geocode/json';
+  const query = new URLSearchParams({ address, key: config.GoogleMapsApiKey });
+  const queryUrl = `${baseUrl}?${query}`;
+  console.log(queryUrl);
+  return (await axios.get(queryUrl)).data;
+}
 
 export default defineComponent({
   components: {
@@ -22,7 +35,9 @@ export default defineComponent({
       searchResults: [],
       selectedSearchResult: null,
       isLoading: false,
+      searchTimerId: null,
       descriptionLimit: 60,
+      map: null, // Actual map object.
       mapOptions: {
         geojson: {
           type: 'FeatureCollection',
@@ -58,9 +73,7 @@ export default defineComponent({
     // Map search result to entrie for display list.
     searchResultItems () {
       return this.searchResults.map((entry: any) => {
-        const Description = entry.Description.length > this.descriptionLimit
-          ? entry.Description.slice(0, this.descriptionLimit) + '...'
-          : entry.Description;
+        const Description = entry.formatted_address;
 
         return Object.assign({}, entry, { Description });
       });
@@ -69,35 +82,48 @@ export default defineComponent({
   watch: {
     searchText (val, oldVal) {
       console.debug('searchText', oldVal, '->', val);
-      // Items have already been loaded
-      if (this.searchResults.length > 0) return;
 
-      // Items have already been requested
+      if (!this.searchText.length) return;
       if (this.isLoading) return;
 
       this.isLoading = true;
 
-      // Lazily load input items
-      fetch('https://api.publicapis.org/entries')
-        .then(res => res.json())
-        .then(res => {
-          const { entries } = res;
-          this.searchResults = entries.slice(0, 20);
-          this.count = 20;
-        })
-        .catch(err => {
-          console.log(err);
-        })
-        .finally(() => (this.isLoading = false));
+      // Cancel last search and queue a new one.
+      if(this.searchTimerId) {
+        console.log('cancel', this.searchTimerId);
+        clearTimeout(this.searchTimerId);
+      }
+
+      this.searchTimerId = setTimeout(() => {
+        // Lazily load input items
+        geocode(this.searchText)
+          .then((data: any) => {
+            this.searchResults = data.results.slice(0, 20);
+            this.count = this.searchResults.length;
+          })
+          .catch(err => {
+            console.log(err);
+          })
+          .finally(() => (this.isLoading = false));
+      }, 500);
     },
   },
   methods: {
     mapReady(mapObject: any) {
       console.log('Map ready', mapObject);
+      this.map = mapObject;
     },
-    doSearch() {
-      console.log('');
-    }
+    showOnMap() {
+      if(!this.selectedSearchResult) return false;
+      console.debug('showOnMap', this.selectedSearchResult);
+      const { northeast, southwest } = this.selectedSearchResult.geometry.viewport;
+      const location = this.selectedSearchResult.geometry.location;
+      this.showSearchDialog = false;
+      nextTick(() => {
+        L.marker(location).addTo(this.map);
+        this.map.fitBounds([northeast, southwest]);
+      });
+    },
   }
 });
 </script>
@@ -126,38 +152,48 @@ export default defineComponent({
             ></v-autocomplete>
           </v-card-text>
           <v-divider></v-divider>
-      <v-expand-transition>
-        <div v-if="selectedSearchResult">
-          <v-list color="red-lighten-3">
-            <v-list-item
-              v-for="(selectedSearchResultFields, i) in fields"
-              :key="i"
-            >
-              <v-list-item-header>
-                <v-list-item-title>{{ field.value }}</v-list-item-title>
-
-                <v-list-item-subtitle>{{ field.key }}</v-list-item-subtitle>
-              </v-list-item-header>
-            </v-list-item>
-          </v-list>
-        </div>
-      </v-expand-transition>
-      <v-divider v-if="selectedSearchResult"></v-divider>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn
-          :disabled="!selectedSearchResult"
-          variant="outlined"
-          @click="selectedSearchResult = null"
-        >Clear<v-icon end>mdi-close-circle</v-icon>
-        </v-btn>
-      </v-card-actions>
+          <v-expand-transition>
+            <div v-if="selectedSearchResult">
+              <v-list color="red-lighten-3">
+                <v-list-item
+                  v-for="(field, i) in selectedSearchResultFields"
+                  :key="i"
+                >
+                  <v-list-item>
+                    <v-list-item-title>{{ field.value }}</v-list-item-title>
+                    <v-list-item-subtitle>{{ field.key }}</v-list-item-subtitle>
+                  </v-list-item>
+                </v-list-item>
+              </v-list>
+            </div>
+          </v-expand-transition>
+          <v-divider v-if="selectedSearchResult"></v-divider>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn
+              variant="outlined"
+              @click="showSearchDialog = false"
+            >Back<v-icon end>mdi-arrow-left</v-icon>
+            </v-btn>
+            <v-btn
+              :disabled="!selectedSearchResult"
+              variant="outlined"
+              @click="selectedSearchResult = null"
+            >Clear Search<v-icon end>mdi-close-circle</v-icon>
+            </v-btn>
+            <v-btn
+              :disabled="!selectedSearchResult"
+              variant="outlined"
+              @click="showOnMap"
+            >Show on Map<v-icon end>mdi-map-marker</v-icon>
+            </v-btn>
+          </v-card-actions>
         </v-card>
       </v-dialog>
       <v-main app>
         <v-container>
           <v-row>
-            <LMap style='height:100vh' :='mapOptions.map'>
+            <LMap style='height:100vh' :='mapOptions.map' @ready='mapReady'>
               <LTileLayer :='mapOptions.tileLayer'  />
               <!-- <LTileLayer :='tileLayer2' /> -->
               <LControl position='topright'><v-btn @click='showSearchDialog = !showSearchDialog' icon='mdi-magnify'></v-btn></LControl>

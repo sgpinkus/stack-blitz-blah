@@ -19,6 +19,7 @@ module.exports = {
     'semi': ['error', 'always'],
     'semi-spacing': 'error',
     'spaced-comment': ['warn', 'always'],
-    'jsx-quotes': ['error', 'prefer-single']
+    'jsx-quotes': ['error', 'prefer-single'],
+    'vue/multi-word-component-names': 0
   }
 };
