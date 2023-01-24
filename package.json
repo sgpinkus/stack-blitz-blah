@@ -12,11 +12,12 @@
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.14.3",
     "@mdi/font": "^7.0.96",
+    "@types/lodash": "^4.14.191",
     "@vue-leaflet/vue-leaflet": "^0.6.1",
     "axios": "^0.27.2",
     "leaflet": "^1.8.0",
+    "lodash": "^4.17.21",
     "vue": "^3.2.37",
-    "vue2-leaflet": "^2.7.1",
     "vuetify": "^3.0.0-beta.11"
   },
   "devDependencies": {

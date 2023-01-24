@@ -2,8 +2,9 @@
 import { defineComponent, nextTick } from 'vue';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { LMap, LTileLayer, LMarker, LCircle, LPolygon, LPopup, LControl } from '@vue-leaflet/vue-leaflet'; // https://vue2-leaflet.netlify.app/components/
+import { LMap, LTileLayer, LMarker, LCircle, LPolygon, LPolyline, LPopup, LControl } from '@vue-leaflet/vue-leaflet'; // https://vue2-leaflet.netlify.app/components/
 import { Loader } from '@googlemaps/js-api-loader';
+import { cloneDeep } from 'lodash';
 
 const config = {
   GoogleMapsApiKey: 'AIzaSyDyEdeJ21vNiJVK-5M24RXKqRJBVmHDnPw',
@@ -43,6 +44,7 @@ export default defineComponent({
     LMarker,
     LCircle,
     LPolygon,
+    LPolyline,
     LPopup,
     LControl
   },
@@ -75,6 +77,13 @@ export default defineComponent({
           attribution: '© OpenStreetMap',
         },
       },
+      shapes: [
+      ],
+      currentShape: [],
+      myIcon: L.icon({
+          iconUrl: 'map-marker-1.svg',
+          iconSize: [12,12],
+      })
     };
   },
   computed: {
@@ -88,6 +97,10 @@ export default defineComponent({
         };
       });
     },
+     // Leaflet doesn't like proxied object for some reason.
+    _currentShape() {
+      return cloneDeep(this.currentShape);
+    }
   },
   watch: {
     searchText (val, oldVal) {
@@ -142,6 +155,28 @@ export default defineComponent({
       this.selectedSearchResult = null;
       this.searchResults = [];
       this.searchText = '';
+    },
+    clearShape() {
+      this.currentShape = [];
+    },
+    clickMap(e: any) {
+      console.log('Click map', e);
+      if(e.latlng) this.currentShape.push(e.latlng);
+      console.log(cloneDeep(this.currentShape));
+    },
+    clickShapeNode(e: any) {
+      console.log('Click shape node', e);
+    },
+    closeCurrentShape() {
+      if(this.currentShape.length) {
+        this.currentShape.push(this.currentShape[0]);
+      }
+    },
+    markerDragStart(e) {
+      console.log('markerDragStart', e);
+    },
+    markerDragEnd(e) {
+      console.log('markerDragEnd', e);
     }
   },
   async beforeMount() {
@@ -216,10 +251,11 @@ export default defineComponent({
       <v-main app>
         <v-container>
           <v-row>
-            <LMap style='height:100vh' :='mapOptions.map' @ready='mapReady'>
+            <LMap style="height:100vh" :='mapOptions.map' @ready='mapReady' @click='clickMap'>
               <LTileLayer :='mapOptions.tileLayer'  />
               <!-- <LTileLayer :='tileLayer2' /> -->
               <LControl position='topright'><v-btn @click='showSearchDialog = !showSearchDialog' icon='mdi-magnify'></v-btn></LControl>
+              <LControl position='topright'><v-btn @click='clearShape' icon='mdi-close'></v-btn></LControl>
               <LCircle :lat-lng='[51.508, -0.11]'
                 color='blue'
                 :radius='500'
@@ -227,10 +263,30 @@ export default defineComponent({
                 :fillOpacity='0.2'
                 :fill='true'
               ><LPopup><h1>Circle</h1></LPopup></LCircle>
-              <LMarker  :lat-lng='[51.508, -0.11]'><LPopup><h1>Hi!</h1><p>You've popped me.</p></LPopup></LMarker>
+              <LMarker
+                :lat-lng='[51.508, -0.11]'
+                draggable='true'
+                @dragstart='markerDragStart'
+                @dragend='markerDragEnd'
+              >
+                <LPopup><h1>Hi!</h1><p>You've popped me.</p></LPopup>
+              </LMarker>
               <LPolygon :lat-lngs='[[51.509, -0.08], [51.503, -0.06],[51.51, -0.047]]' color='#ff00ff' fillColor='#ff00ff' :fill='true'>
                 <LPopup><h1>Polygon</h1><p>You've popped my polygon.</p></LPopup>
               </LPolygon>
+              <LMarker v-for='point in currentShape'
+                :key=point
+                :lat-lng='point'
+                @click='clickShapeNode'
+                :icon="myIcon"
+                draggable='true'
+              >
+                <LPopup><h1>Hi!</h1><p>You've popped me.</p>
+                </LPopup>
+              </LMarker>
+              <LPolyline :lat-lngs="_currentShape" color='#ff00ff' fillColor='#ff00ff' :fill='true'></LPolyline>
+              <LPolyline :lat-lngs='[{"lat":51.527542,"lng":0.069007},{"lat":51.436460,"lng":0.0587081},{"lat":51.457857,"lng":-0.115013}]' color='#ff00ff' fillColor='#ff00ff' :fill='true'>
+              </LPolyline>
             </LMap>
           </v-row>
         </v-container>
