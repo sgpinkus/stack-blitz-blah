@@ -1,1 +1,1 @@
-Toy app demoing use of Vue2-leafet c/w Vuetify.
+Simple app debugging why LMarker doesn't update on prop change
