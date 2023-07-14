@@ -50,8 +50,10 @@ export default defineComponent({
       console.log('Update', this.counter);
       this.counter += 1;
       this.mapStyle.cursor = (this.counter % 2) ? 'pointer' : 'crosshair';
-      this.latLng[0] += (Math.random() - 0.5);
-      this.latLng[1] += (Math.random() - 0.5);
+      this.latLng = [
+        this.latLng[0] + (Math.random() - 0.5)/100,
+        this.latLng[1] + (Math.random() - 0.5)/100
+      ];
       console.log(toRaw(this.mapStyle), toRaw(this.latLng));
     }, 1000);
   }

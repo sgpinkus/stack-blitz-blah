@@ -1,1 +1,1 @@
-Simple app debugging why LMarker doesn't update on prop change
+Demo @vue-leaflet/vue-leaflet bugs.
