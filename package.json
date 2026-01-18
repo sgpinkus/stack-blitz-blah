@@ -3,13 +3,12 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "vite",
-    "build": "run-p type-check \"build-only {@}\" --",
     "build-only": "vite build",
-    "type-check": "vue-tsc --build --force",
-    "lint": "eslint .",
+    "build": "run-p type-check \"build-only {@}\" --",
+    "dev": "run-s prepare build",
     "prepare": "ts-patch install",
-    "start": "run-s prepare build"
+    "start": "run-s prepare build",
+    "type-check": "vue-tsc --build --force"
   },
   "type": "module",
   "dependencies": {
