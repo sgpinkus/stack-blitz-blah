@@ -1,0 +1,1 @@
+Repro https://github.com/vuejs/language-tools/issues/5696
