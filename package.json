@@ -18,13 +18,13 @@
     "@ryoppippi/unplugin-typia": "^2.6.5",
     "@tsconfig/node22": "^22.0.5",
     "@types/node": "^25.0.8",
-    "@vitejs/plugin-vue": "^5.2.1",
+    "@vitejs/plugin-vue": "^6.0.3",
     "@vue/tsconfig": "^0.8.1",
-    "npm-run-all2": "^7.0.2",
+    "npm-run-all2": "^8.0.4",
     "ts-patch": "^3.3.0",
     "typescript": "~5.8.3",
     "typia": "^9.3.1",
-    "vite": "^6.0.4",
-    "vue-tsc": "^2.1.10"
+    "vite": "^7.3.1",
+    "vue-tsc": "^3.2.2"
   }
 }
